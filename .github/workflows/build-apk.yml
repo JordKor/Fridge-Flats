@@ -5,6 +5,9 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,3 +30,16 @@ jobs:
         with:
           name: FridgeFlats-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      # Publish the APK as a release so it can be downloaded straight to a phone.
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk FridgeFlats.apk
+          TAG="build-${{ github.run_number }}"
+          gh release create "$TAG" FridgeFlats.apk \
+            --repo "${{ github.repository }}" \
+            --title "Fridge Flats (build ${{ github.run_number }})" \
+            --notes "Download FridgeFlats.apk below and open it on your Android phone." \
+            --latest
